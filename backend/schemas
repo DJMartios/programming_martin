@@ -1,0 +1,72 @@
+from pydantic import BaseModel
+from datetime import date
+
+class PetBase(BaseModel):
+    name: str
+    species: str
+    breed: str
+    age: int
+
+class PetCreate(PetBase):
+    pass
+
+class PetOut(PetBase):
+    id: int
+    IsAdopted: bool
+
+    class Config:
+        from_attributes = True  
+
+class AdopterBase(BaseModel):
+    name: str
+    email: str | None = None
+    phone: str | None = None
+
+class AdopterCreate(AdopterBase):
+    pass
+
+class AdopterOut(AdopterBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class AdoptionBase(BaseModel):
+    pet_id: int
+    adopter_id: int
+    adoption_date: date
+
+class AdoptionCreate(AdoptionBase):
+    pass
+
+class PetBrief(BaseModel):
+    id: int
+    name: str
+    species: str
+    breed: str
+    age: int
+
+    class Config:
+        from_attributes = True
+
+class AdopterBrief(BaseModel):
+    id: int
+    name: str
+    email: str
+    phone: str
+
+    class Config:
+        from_attributes = True
+
+class AdoptionOut(BaseModel):
+    id: int
+    adoption_date: date
+    pet: PetBrief
+    adopter: AdopterBrief
+
+    class Config:
+        from_attributes = True
+
+class WorkerLogin(BaseModel):
+    username: str
+    password: str
