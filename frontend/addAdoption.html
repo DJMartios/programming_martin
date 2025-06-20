@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Adoption - PetAdopt</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "login.html";
+      } else {
+        loadDropdowns(token);
+      }
+    });
+
+    function logout() {
+      const token = localStorage.getItem("token");
+      fetch("http://127.0.0.1:8000/logout", {
+        method: "POST",
+        headers: {
+          "Authorization": token
+        }
+      }).finally(() => {
+        localStorage.removeItem("token");
+        window.location.href = "login.html";
+      });
+    }
+
+    async function loadDropdowns(token) {
+      try {
+        // Load pets
+        const petRes = await fetch("http://127.0.0.1:8000/pets/", {
+          headers: {
+            "Authorization": token
+          }
+        });
+        const pets = await petRes.json();
+        const petSelect = document.getElementById("petSelect");
+
+        pets
+          .filter(p => !p.is_adopted)
+          .forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p.id;
+            opt.textContent = `${p.name}, ${p.species}, ${p.breed}, ${p.age}`;
+            petSelect.appendChild(opt);
+          });
+
+        // Load adopters
+        const adopterRes = await fetch("http://127.0.0.1:8000/adopters/", {
+          headers: {
+            "Authorization": token
+          }
+        });
+        const adopters = await adopterRes.json();
+        const adopterSelect = document.getElementById("adopterSelect");
+
+        adopters.forEach(a => {
+          const opt = document.createElement("option");
+          opt.value = a.id;
+          opt.textContent = `${a.name} (${a.email || "no email"})`;
+          adopterSelect.appendChild(opt);
+        });
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load dropdowns. Please try again.");
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>Register a New Adoption</h1>
+  <button onclick="location.href='index.html'">← Back to Home</button>
+  <button onclick="logout()">Logout</button>
+
+  <form id="adoptionForm">
+    <label for="petSelect">Select Pet (Not Yet Adopted)</label>
+    <select id="petSelect" required>
+      <option value="">-- Choose a Pet --</option>
+    </select>
+
+    <label for="adopterSelect">Select Adopter</label>
+    <select id="adopterSelect" required>
+      <option value="">-- Choose an Adopter --</option>
+    </select>
+
+    <label for="adoption_date">Adoption Date</label>
+    <input type="date" id="adoption_date" required />
+
+    <button type="submit">Submit Adoption</button>
+  </form>
+
+  <p class="message" id="message"></p>
+
+  <script>
+    const form = document.getElementById("adoptionForm");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        message.textContent = "You are not logged in.";
+        message.style.color = "red";
+        return;
+      }
+
+      const data = {
+        pet_id: parseInt(document.getElementById("petSelect").value),
+        adopter_id: parseInt(document.getElementById("adopterSelect").value),
+        adoption_date: document.getElementById("adoption_date").value,
+      };
+
+      try {
+        const res = await fetch("http://127.0.0.1:8000/adoptions/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": token
+          },
+          body: JSON.stringify(data),
+        });
+
+        if (res.ok) {
+          message.textContent = "Adoption recorded successfully!";
+          message.style.color = "green";
+          form.reset();
+        } else {
+          const errData = await res.json();
+          message.textContent = `Failed to record adoption: ${errData.detail || "Unknown error"}`;
+          message.style.color = "red";
+        }
+      } catch (err) {
+        console.error(err);
+        message.textContent = "Error connecting to server.";
+        message.style.color = "red";
+      }
+    });
+  </script>
+</body>
+</html>
