@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Adoptions - PetAdopt</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "login.html";
+      } else {
+        loadAdoptions(token);
+      }
+    });
+
+    function logout() {
+      const token = localStorage.getItem("token");
+      fetch("http://127.0.0.1:8000/logout", {
+        method: "POST",
+        headers: {
+          "Authorization": token
+        }
+      }).finally(() => {
+        localStorage.removeItem("token");
+        window.location.href = "login.html";
+      });
+    }
+
+    async function loadAdoptions(token) {
+      const response = await fetch("http://127.0.0.1:8000/adoptions/", {
+        headers: {
+          "Authorization": token
+        }
+      });
+
+      if (!response.ok) {
+        alert("Failed to load adoptions. Please check your login.");
+        return;
+      }
+
+      const adoptions = await response.json();
+      const tbody = document.querySelector("#adoptionsTable tbody");
+      tbody.innerHTML = "";
+
+      adoptions.forEach(a => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${a.id}</td>
+          <td>${a.pet.name}, ${a.pet.species}, ${a.pet.breed}, ${a.pet.age} yrs</td>
+          <td>${a.adopter.name} (${a.adopter.email || "no email"})</td>
+          <td>${a.adoption_date}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+  </script>
+
+</head>
+<body>
+  <h1>All Adoptions</h1>
+  <button onclick="location.href='index.html'">← Back to Home</button>
+  <button onclick="logout()">Logout</button>
+
+  <table id="adoptionsTable">
+    <thead>
+      <tr>
+        <th>Adoption ID</th>
+        <th>Pet Info</th>
+        <th>Adopter Info</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</body>
+</html>
