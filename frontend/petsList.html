@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PetAdopt - Pets Available</title>
+  <link rel="stylesheet" href="style.css">
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "login.html";
+      } else {
+        loadPets(token);
+      }
+    });
+
+    function logout() {
+      const token = localStorage.getItem("token");
+      fetch("http://127.0.0.1:8000/logout", {
+        method: "POST",
+        headers: {
+          "Authorization": token
+        }
+      }).finally(() => {
+        localStorage.removeItem("token");
+        window.location.href = "login.html";
+      });
+    }
+
+    async function loadPets(token) {
+      const response = await fetch("http://127.0.0.1:8000/pets/", {
+        headers: {
+          "Authorization": token
+        }
+      });
+
+      if (!response.ok) {
+        alert("Failed to load pets. Are you logged in?");
+        return;
+      }
+
+      const petsData = await response.json();
+      renderPets(petsData);
+    }
+
+    function renderPets(pets) {
+      const tbody = document.querySelector("#petsTable tbody");
+      tbody.innerHTML = "";
+
+      pets.forEach(pet => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${pet.name}</td>
+          <td>${pet.species}</td>
+          <td>${pet.breed}</td>
+          <td>${pet.age}</td>
+          <td>${pet.is_adopted ? "Yes" : "No"}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+  </script>
+
+</head>
+<body>
+  <h1>Pets Available for Adoption</h1>
+  <button onclick="location.href='index.html'">Back</button>
+  <button onclick="logout()">Logout</button>
+
+  <table id="petsTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Species</th>
+        <th>Breed</th>
+        <th>Age</th>
+        <th>Adopted</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</body>
+</html>

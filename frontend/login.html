@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Worker Login</title>
+</head>
+<body>
+  <h2>Login</h2>
+  <form id="loginForm">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required><br><br>
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required><br><br>
+
+    <button type="submit">Login</button>
+  </form>
+
+  <div id="message"></div>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+      const form = new FormData(event.target);
+
+      const response = await fetch("http://127.0.0.1:8000/login", {
+        method: "POST",
+        body: new URLSearchParams({
+          username: form.get("username"),
+          password: form.get("password")
+        })
+      });
+
+      const msgDiv = document.getElementById("message");
+
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem("token", data.access_token);
+        msgDiv.textContent = "Login successful!";
+        window.location.href = "index.html";  // or dashboard.html
+      } else {
+        const error = await response.json();
+        msgDiv.textContent = "Login failed: " + (error.detail || "Unknown error");
+      }
+    });
+  </script>
+</body>
+</html>
