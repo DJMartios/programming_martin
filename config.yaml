@@ -1,0 +1,86 @@
+openapi: 3.0.0
+
+info:
+  title: "PetAdopt API"
+  description: "An API to manage pets and adoptions"
+  version: "1.0.0"
+
+server:
+  listen_ip: "127.0.0.1"
+  port: 8000
+  debug: true
+
+database:
+  url: "mysql+pymysql://root:adriana2005@localhost:3306/petadopt"
+
+auth:
+  secret_key: "your-secret-key"
+  algorithm: "HS256"
+  access_token_expire_minutes: 60
+
+cors:
+  allow_origins:
+    - "*"
+
+components:
+  schemas:
+    Pet:
+      type: "object"
+      required:
+        - name
+        - species
+        - age
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        species:
+          type: string
+        breed:
+          type: string
+        age:
+          type: integer
+        is_adopted:
+          type: boolean
+
+  requestBodies:
+    PetInput:
+      description: "Pet to be created"
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Pet"
+
+paths:
+  /pets/:
+    get:
+      operationId: "pets.list"
+      tags:
+        - Pets
+      summary: "List all pets"
+      responses:
+        "200":
+          description: "List of pets"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pet"
+
+    post:
+      operationId: "pets.create"
+      tags:
+        - Pets
+      summary: "Create a new pet"
+      requestBody:
+        $ref: "#/components/requestBodies/PetInput"
+      responses:
+        "201":
+          description: "Pet created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
